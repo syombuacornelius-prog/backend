@@ -705,12 +705,38 @@ app.post("/api/sales", async (req, res) => {
 // START SERVER
 // ============================================
 
-initDb().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ Visiontec server running at http://localhost:${PORT}`);
-    console.log(`📊 Connected to Aiven MySQL database: defaultdb`);
-  });
-}).catch(e => {
-  console.error("❌ MySQL setup failed:", e.message);
-  process.exit(1);
-});
+async function startServer() {
+  try {
+    // Check for required environment variables
+    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
+      console.error('❌ CRITICAL: Missing database environment variables!');
+      console.error('Please set DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME in your environment variables.');
+      process.exit(1);
+    }
+
+    // Test database connection
+    console.log('Attempting to connect to database...');
+    const connection = await pool.getConnection();
+    console.log('✅ Database connection successful!');
+    connection.release();
+
+    // Initialize database
+    console.log('Initializing database tables...');
+    await initDb();
+    console.log('✅ Database initialization complete!');
+
+    // Start server
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✅ Visiontec server running on port ${PORT}`);
+      console.log(`📊 Connected to Aiven MySQL database: ${process.env.DB_NAME}`);
+      console.log(`🌐 Server is ready to accept connections`);
+    });
+  } catch (error) {
+    console.error('❌ CRITICAL ERROR:', error.message);
+    console.error('Stack trace:', error.stack);
+    console.error('Server cannot start. Check the error above.');
+    process.exit(1);
+  }
+}
+
+startServer();
