@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const path = require("path");
 const mysql = require("mysql2/promise");
@@ -9,11 +10,11 @@ const PORT = Number(process.env.PORT || 3000);
 // DATABASE CONNECTION - Aiven MySQL
 // ============================================
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "visiontec-visiontec.i.aivencloud.com",
-  port: Number(process.env.DB_PORT || 28128),
-  user: process.env.DB_USER || "avnadmin",
-  password: process.env.DB_PASSWORD || "AVNS_sNCBqJScG-zcAAmY3xT",
-  database: process.env.DB_NAME || "defaultdb",
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   charset: "utf8mb4",
