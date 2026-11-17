@@ -9,19 +9,41 @@ const PORT = Number(process.env.PORT || 3000);
 // ============================================
 // DATABASE CONNECTION - Aiven MySQL
 // ============================================
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  charset: "utf8mb4",
-  ssl: {
-    rejectUnauthorized: false
+// Use the connection string directly for Aiven Cloud
+const connectionString = process.env.DATABASE_URL || "mysql://avnadmin:AVNS_sNCBqJScG-zcAAmY3xT@visiontec-visiontec.i.aivencloud.com:28128/defaultdb?ssl-mode=REQUIRED";
+
+// Helper function to parse the connection string safely
+function parseConnectionString(connStr) {
+  try {
+    // Replace the first occurrence of '@' in the password if it exists by encoding it
+    // But since the provided string is clean, we can parse it directly as a URL
+    // However, mysql2/promise expects an object, not a string for createPool
+    // So we must parse the URL manually to extract components for the pool config
+    
+    const url = new URL(connStr);
+    const sslMode = url.searchParams.get('ssl-mode') || 'REQUIRED';
+    
+    return {
+      host: url.hostname,
+      port: parseInt(url.port, 10),
+      user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      database: url.pathname.substring(1), // Remove leading '/'
+      ssl: {
+        rejectUnauthorized: false // Required for Aiven managed SSL
+      },
+      waitForConnections: true,
+      connectionLimit: 10,
+      charset: "utf8mb4"
+    };
+  } catch (error) {
+    console.error("Failed to parse database connection string:", error);
+    throw error;
   }
-});
+}
+
+const poolConfig = parseConnectionString(connectionString);
+const pool = mysql.createPool(poolConfig);
 
 async function initDb() {
   const ddl = [
@@ -211,7 +233,7 @@ app.get("/api/health", async (_q, r) => {
     await pool.query("SELECT 1");
     r.json({
       ok: true,
-      database: process.env.DB_NAME || "defaultdb",
+      database: "defaultdb",
       tables: [...tables, "sale_items", "users", "settings", "audit_logs"]
     });
   } catch (e) {
@@ -707,13 +729,6 @@ app.post("/api/sales", async (req, res) => {
 
 async function startServer() {
   try {
-    // Check for required environment variables
-    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
-      console.error('❌ CRITICAL: Missing database environment variables!');
-      console.error('Please set DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME in your environment variables.');
-      process.exit(1);
-    }
-
     // Test database connection
     console.log('Attempting to connect to database...');
     const connection = await pool.getConnection();
@@ -728,7 +743,7 @@ async function startServer() {
     // Start server
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`✅ Visiontec server running on port ${PORT}`);
-      console.log(`📊 Connected to Aiven MySQL database: ${process.env.DB_NAME}`);
+      console.log(`📊 Connected to Aiven MySQL database: defaultdb`);
       console.log(`🌐 Server is ready to accept connections`);
     });
   } catch (error) {
