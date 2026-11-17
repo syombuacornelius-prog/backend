@@ -11,16 +11,22 @@ const PORT = Number(process.env.PORT || 3000);
 // DATABASE CONNECTION - Aiven MySQL
 // ============================================
 
-if (!process.env.DATABASE_URL) {
-  console.error('❌ CRITICAL: DATABASE_URL environment variable is not set!');
-  console.error('Please add DATABASE_URL to your Render environment variables.');
+// IMPORTANT: Replace YOUR_AIVEN_PASSWORD_HERE with your actual Aiven password
+// You can find this in your Aiven console by clicking the eye icon next to the password
+const AIVEN_PASSWORD = "YOUR_AVEN_PASSWORD_HERE"; // <-- PUT YOUR PASSWORD HERE
+
+if (AIVEN_PASSWORD === "YOUR_AVEN_PASSWORD_HERE" || AIVEN_PASSWORD === "") {
+  console.error('❌ CRITICAL: Aiven password not configured!');
+  console.error('Please update the AIVEN_PASSWORD constant in server.js with your actual Aiven password.');
   process.exit(1);
 }
 
+const AIVEN_CONNECTION_STRING = `mysql://avnadmin:${AIVEN_PASSWORD}@visiontec-visiontec.i.aivencloud.com:28128/defaultdb?ssl-mode=REQUIRED`;
+
 console.log('Attempting to connect to Aiven MySQL database...');
 
-// Parse the connection string and add SSL configuration
-const connectionStringUrl = new URL(process.env.DATABASE_URL);
+// Parse the connection string
+const connectionStringUrl = new URL(AIVEN_CONNECTION_STRING);
 const sslMode = connectionStringUrl.searchParams.get('ssl-mode');
 
 const poolConfig = {
