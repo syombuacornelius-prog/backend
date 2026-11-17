@@ -13,7 +13,7 @@ const PORT = Number(process.env.PORT || 3000);
 
 // IMPORTANT: Replace YOUR_AIVEN_PASSWORD_HERE with your actual Aiven password
 // You can find this in your Aiven console by clicking the eye icon next to the password
-const AIVEN_PASSWORD = "YOUR_AVEN_PASSWORD_HERE"; // <-- PUT YOUR PASSWORD HERE
+const AIVEN_PASSWORD = "AVNS_sNCBqJScG-zcAAmY3xT"; // <-- PUT YOUR PASSWORD HERE
 
 if (AIVEN_PASSWORD === "YOUR_AVEN_PASSWORD_HERE" || AIVEN_PASSWORD === "") {
   console.error('❌ CRITICAL: Aiven password not configured!');
